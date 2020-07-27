@@ -1,5 +1,6 @@
 package guru.sfg.brewery.config;
 
+import guru.sfg.brewery.security.SfgPasswordEncoderFactories;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -11,6 +12,9 @@ import org.springframework.security.config.annotation.web.configurers.Expression
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.factory.PasswordEncoderFactories;
+import org.springframework.security.crypto.password.*;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 
 @Configuration
@@ -20,8 +24,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
-                // Intercept the authorize request for the root
-                // and allow everyone thru.
                 .authorizeRequests(authorize -> {
                     authorize
                             .antMatchers("/", "/webjars/**", "/login", "/resources/**").permitAll()
@@ -36,26 +38,30 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .httpBasic();
     }
 
-    /*
-    Fluent API Method
-     */
+    @Bean
+    PasswordEncoder passwordEncoder() {
+        return SfgPasswordEncoderFactories.createDelegatingPasswordEncoder();
+    }
+
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
         auth.inMemoryAuthentication()
                 .withUser("spring")
-                .password("{noop}guru")
+                .password("{bcrypt}$2a$10$7tYAvVL2/KwcQTcQywHIleKueg4ZK7y7d44hKyngjTwHCDlesxdla")
                 .roles("ADMIN")
-
                 .and()
-
                 .withUser("user")
-                .password("{noop}password")
+                .password("{sha256}1296cefceb47413d3fb91ac7586a4625c33937b4d3109f5a4dd96c79c46193a029db713b96006ded")
                 .roles("USER");
 
-        //super.configure(auth);
+        auth.inMemoryAuthentication()
+                .withUser("scott")
+                .password("{bcrypt}$2a$15$Zr.m1Xw.F5D1mSt8Pv1f.eATQdarKndwtlVBPo7V81sEvTPRPZvrm")
+                .roles("CUSTOMER");
     }
+}
 
-    //    @Override
+//    @Override
 //    @Bean
 //    protected UserDetailsService userDetailsService() {
 //        UserDetails admin = User.withDefaultPasswordEncoder()
@@ -72,4 +78,3 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 //
 //        return new InMemoryUserDetailsManager(admin, user);
 //    }
-}
