@@ -17,6 +17,7 @@ import org.springframework.web.context.WebApplicationContext;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -70,5 +71,26 @@ public class BeerControllerIT extends BaseIT {
     void findBeersWithHttpBasicBadUser() throws Exception {
         mockMvc.perform(get("/beers/find").with(httpBasic("foo", "bar")))
                 .andExpect(status().is4xxClientError());
+    }
+
+    @Test
+    void deleteBeerUrl() throws Exception {
+        mockMvc.perform(delete("/api/v1/beer/01234-1231223-234123412-512341234")
+                .param("apiKey", "spring").param("apiSecret", "guru"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void deleteBeerBadCredsUrl() throws Exception {
+        mockMvc.perform(delete("/api/v1/beer/01234-1231223-234123412-512341234")
+                .param("apiKey", "spring").header("apiSecret", "guruxxx"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void deleteBeerBadCreds() throws Exception {
+        mockMvc.perform(delete("/api/v1/beer/01234-1231223-234123412-512341234")
+                .header("Api-Key", "spring").header("Api-Secret", "guruxxx"))
+                .andExpect(status().isUnauthorized());
     }
 }
